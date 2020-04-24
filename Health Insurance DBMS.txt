@@ -1,0 +1,1756 @@
+--Deliverable 3: Design Document  
+--Group Project: XYZ Health Insurance 
+--Company�s Data Management Project
+--Course: IS 620 � Advanced Database Project
+--University of Maryland, Baltimore County
+--Department of Information Systems
+
+
+--DROP TABLE COMMANDS
+
+
+drop table claim_line;
+drop table claims;
+drop table message;
+drop table premium;
+drop table policy_dep;
+drop table policy;
+drop table ins_plans;
+drop table coverage;
+drop table medical_serv;
+drop table provider;
+drop table dependent;
+drop table customer;   
+drop table users;
+
+
+--DROP SEQUENCE COMMANDS
+
+DROP SEQUENCE msg_seq; 
+DROP SEQUENCE cus_reg_seq;
+DROP SEQUENCE dep_reg_seq;
+DROP SEQUENCE pro_reg_seq;
+DROP SEQUENCE policy_seq;
+DROP SEQUENCE claims_seq;
+
+
+--CREATE SEQUENCE COMMANDS
+
+
+CREATE SEQUENCE cus_reg_seq START WITH 1002;
+CREATE SEQUENCE dep_reg_seq START WITH 1002;  
+CREATE SEQUENCE pro_reg_seq START WITH 1002; 
+CREATE SEQUENCE msg_seq START WITH 3; 
+CREATE SEQUENCE policy_seq START WITH 2;
+CREATE SEQUENCE claims_seq START WITH 1;
+
+--CREATE TABLE COMMANDS
+
+
+--USER TABLE
+
+create table users(
+           user_id varchar2(30) UNIQUE,
+           user_email varchar2(30),
+           password varchar2(20),
+           user_type varchar(30),
+           mail_addr varchar2(50),
+           phone number(12),
+           primary key(user_email));
+
+
+--CUSTOMER TABLE
+
+create table customer(
+	   cus_id varchar2(10),
+           cname varchar2(40),
+           dob date,
+	   gender varchar(10),
+	   email varchar2(30),
+           primary key(cus_id),
+	   foreign key(cus_id) references users(user_id),
+	   foreign key(email) references users(user_email));
+
+
+--DEPENDENT TABLE
+
+
+create table dependent(
+	   dep_id varchar2(10),
+     dname varchar2(40),
+	   dob date,
+	   gender varchar(10),
+	   email varchar2(30) UNIQUE,
+	   dependent_on varchar2(10),
+           dependent_relationship varchar(20),
+     	   primary key(dep_id),	
+	   foreign key(dep_id) references users(user_id),
+	   foreign key(email) references users(user_email));
+
+
+--PROVIDER TABLE
+
+
+create table provider(
+	   prov_id varchar2(10),
+           pname varchar2(40),
+	   email varchar2(30),
+	   provider_type varchar(30),
+           primary key(prov_id),           
+           foreign key(prov_id) references users(user_id),
+           foreign key(email) references users(user_email));
+
+
+--MEDICAL SERVICE TABLE
+
+
+create table medical_serv(
+           med_svc_id varchar2(10),
+           med_svc_desc varchar(50),
+           primary key(med_svc_id));
+
+
+--COVERAGE TABLE
+
+
+create table coverage(
+           cov_id varchar2(10),
+           med_svc_id varchar2(10),
+           max_allwd_svc int,
+           allwd_chrg_svc number,
+           in_network_copay number,
+           in_network_coinsr number,
+           out_network_copay number,
+           out_network_coinsr number,
+           primary key(cov_id),
+           foreign key(med_svc_id) references medical_serv(med_svc_id));
+
+
+--PLANS TABLE
+
+
+create table ins_plans(
+           plan_id varchar2(10),
+           plan_name varchar(20),
+           plan_year int,
+           cov_id varchar2(10),
+           deductible number,
+           max_out_pocket number,
+           max_out_pocket_family number,
+           primary key(plan_id,plan_year,deductible,max_out_pocket,max_out_pocket_family),
+           foreign key(cov_id) references coverage(cov_id));
+
+--POLICY TABLE
+
+
+           create table policy(
+           policy_id varchar2(10),
+           customer_id varchar2(10),
+           plan_id varchar2(10),
+           plan_year int,
+           deductible number,
+           max_out_pocket number,
+           max_out_pocket_family number,
+           primary key(policy_id),
+           foreign key(customer_id) references customer(cus_id),
+           foreign key(plan_id,plan_year,deductible,max_out_pocket,max_out_pocket_family) references ins_plans(plan_id,plan_year,deductible,max_out_pocket,max_out_pocket_family));
+
+
+--DEPENDENT POLICY TABLE
+
+
+
+create table policy_dep(
+	   policy_id varchar2(10),
+	   dep_id   varchar2(10), 
+           d_email varchar2(30),		
+	   primary key(policy_id,dep_id),
+	   foreign key(policy_id) references policy(policy_id),
+           foreign key(dep_id) references dependent(dep_id),
+           foreign key(d_email) references dependent(email));
+
+
+    
+
+--PREMIUM TABLE
+
+
+create table premium(
+           policy_id varchar2(10),
+           annual_rate number,
+           rate_level number,
+           premium_amt number,
+           premium_date date,
+           primary key(policy_id,premium_date),
+           foreign key(policy_id) references policy(policy_id));
+
+
+--MESSAGE TABLE
+
+
+create table message(
+           msg_id varchar2(10),
+           user_id varchar2(10),
+           msg varchar(150),
+           msg_date date,
+           primary key(msg_id),
+           foreign key(user_id) references users(user_id));
+
+
+--CLAIMS TABLE
+
+create table claims(
+            claim_id varchar2(20), 
+            claim_date date,
+            plan_id varchar2(10),
+            med_svc_id varchar2(10),
+            status varchar(15),
+            Patient varchar2(10),
+            policy_id varchar2(10),
+            provider varchar2(10),
+            plan_year int,
+            med_svc_date date,
+            sp_charge number,
+            amt_copay number,
+            deductible number,
+            deductible_paid number,
+            max_out_pocket number,
+            max_out_pocket_paid number,
+            max_out_pocket_family number,
+            max_out_pocket_family_paid number,
+            amt_coinsr number,
+            amt_paid_by_insr number,
+            amt_paid_by_cust number,
+            total_charge_cust number,
+            total_charge_insr number,
+            primary key(claim_id,med_svc_id,med_svc_date),
+            foreign key(med_svc_id) references medical_serv(med_svc_id),
+            foreign key(plan_id,plan_year,deductible,max_out_pocket,max_out_pocket_family) references ins_plans(plan_id,plan_year,deductible,max_out_pocket,max_out_pocket_family),
+            foreign key(patient) references users(user_id),
+            foreign key(provider) references provider(prov_id));
+
+
+--CLAIM LINE TABLE
+
+             create table claim_line(
+             policy_id varchar2(10),
+             med_svc_id varchar2(10),
+             med_svc_date date,
+             patient varchar2(10),
+             sp_charge number,
+             status varchar2(15),
+             claim_id varchar2(10),
+             provider varchar2(10),
+             primary key(claim_id,med_svc_id,patient,med_svc_date),
+             foreign key(med_svc_id) references medical_serv(med_svc_id),
+             foreign key(policy_id) references policy(policy_id),
+             foreign key(patient) references users(user_id),
+             foreign key(provider) references provider(prov_id),
+             CONSTRAINT CHK_Status CHECK (status='Accepted' or status='Rejected'));
+
+
+
+--INSERTION OF  VALUES  INTO THE TABLES                
+
+
+--INSERT VALUES FOR USER TABLE
+
+insert into users(user_id,user_email, password, user_type,mail_addr, phone)
+values('cus1000','harryp@gmail.com','abc@1023','customer','4650 Aldgate green,Arbutus,Maryland',7322107623);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('dep1000','jina1@gmail.com','ghi8910!','dependent','4650 Aldgate green,Arbutus,Maryland',4438545846);
+insert into users(user_id,user_email, password, user_type,mail_addr, phone)
+values('cus1001','jim2@gmail.com','def@1010','customer','4661 Courtney road,Arbutus,Maryland',1234567890);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('dep1001','jean6@gmail.com','jkl@2020!','dependent','4661 Courtney road,Arbutus,Maryland',4567097871);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('dep1010','jenny@gmail.com','jkl@2020!','dependent', '5000 Aldgate green,Arbutus,Maryland',7322323232);
+insert into users(user_id,user_email, password, user_type,mail_addr, phone)
+values('cus1007','diana@gmail.com','a$b#1023','customer','412 wilkens Avenue,baltimore,Maryland',7322123623);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('dep1007','sam@gmail.com','ghi8910!','dependent','412 wilkens Avenue,Arbutus,Maryland',4238545846);
+insert into users(user_id,user_email, password, user_type,mail_addr, phone)
+values('cus1002','Ana@gmail.com','ana@1010','customer','8961 Courtney road,Arbutus,Maryland',1238767890);
+insert into users(user_id,user_email, password, user_type,mail_addr, phone)
+values('cus1010','henry@gmail.com','abc@1023','customer','5000 Aldgate green,Arbutus,Maryland',7322323232);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('pro1000','bluecross@gmail.com','jam098@','provider','4871 Palladi drive,Halethorpe,Maryland',5687432910);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('pro1011','dentalcare@gmail.com','12qw098@','provider','4871 picalldy,Halethorpe,Maryland',5687432910);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('pro1001','apollo_hospitals@gmail.com','1234@hos','provider','5000 national pike road,Catonsville,Maryland',1985093257);
+insert into users(user_id,user_email, password, user_type,mail_addr, phone)
+values('cus1008','domnic@gmail.com','a$b#1023','customer','114 lexington st,baltimore,Maryland',4432123623);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('dep1008','sindhu@gmail.com','sin8910!','dependent','114 lexington st,Arbutus,Maryland',4238540006);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('pro1012','abclab@gmail.com','12qw0lab','provider','487 wilkens ave,Maryland',5687432000);
+insert into users(user_id,user_email, password, user_type, mail_addr, phone)
+values('pro1013','drshah@gmail.com','12qw0lab','provider','487 wilkens ave,Maryland',5687432001);
+
+
+
+--INSERT VALUES FOR CUSTOMER TABLE
+
+
+insert into customer(cus_id,cname,dob,gender,email)
+values('cus1000','harry','19-oct-1965','male','harryp@gmail.com');
+insert into customer(cus_id,cname,dob,gender,email)
+values('cus1001','jim','20-june-1950','male','jim2@gmail.com');
+insert into customer(cus_id,cname,dob,gender,email)
+values('cus1002','Ana','20-june-1960','female','Ana@gmail.com');
+insert into customer(cus_id,cname,dob,gender,email)
+values('cus1010','Henry','20-august-1968','male','henry@gmail.com');
+insert into customer(cus_id,cname,dob,gender,email)
+values('cus1007','Diana','25-august-1978','Female','diana@gmail.com');
+insert into customer(cus_id,cname,dob,gender,email)
+values('cus1008','Domnic','25-august-1978','male','domnic@gmail.com');
+
+
+--INSERT VALUES FOR  DEPENDENT TABLE
+
+insert into dependent(dep_id,dname,dob,gender,email,dependent_on,dependent_relationship)
+values('dep1000','jina','28-apr-1967','female','jina1@gmail.com','cus1000','spouse');
+insert into dependent(dep_id,dname,dob,gender,email,dependent_on,dependent_relationship)
+values('dep1010','jenny','20-jun-2000','female','jenny@gmail.com','cus1010','daughter');
+insert into dependent(dep_id,dname,dob,gender,email,dependent_on,dependent_relationship)
+values('dep1007','sam','28-apr-2010','male','sam@gmail.com','cus1007','son');
+insert into dependent(dep_id,dname,dob,gender,email,dependent_on,dependent_relationship)
+values('dep1008','sindhu','28-apr-1980','female','sindhu@gmail.com','cus1008','wife');
+insert into dependent(dep_id,dname,dob,gender,email,dependent_on,dependent_relationship)
+values('dep1018','sally','28-mar-2015','female','sally@gmail.com','cus1008','daughter');
+
+
+--INSERT VALUES FOR PROVIDER TABLE
+
+
+insert into provider(prov_id,pname,email,provider_type)
+values('pro1000','bluecross','bluecross@gmail.com','in-network');
+insert into provider(prov_id,pname,email,provider_type)
+values('pro1001','apollo','apollo_hospitals@gmail.com','out-network');
+insert into provider(prov_id,pname,email,provider_type)
+values('pro1011','dentalcare','dentalcare@gmail.com','out-network');
+insert into provider(prov_id,pname,email,provider_type)
+values('pro1012','abclab','abclab@gmail.com','out-network');
+insert into provider(prov_id,pname,email,provider_type)
+values('pro1013','drshah','drshah@gmail.com','out-network');
+
+
+
+--INSERT VALUES FOR MEDICAL SERVICE TABLE
+
+insert into medical_serv(med_svc_id,med_svc_desc)
+values(100,'office visit');
+insert into medical_serv(med_svc_id,med_svc_desc)
+values(101,'annual physical exam');
+insert into medical_serv(med_svc_id,med_svc_desc)
+values(102,'blood test');
+insert into medical_serv(med_svc_id,med_svc_desc)
+values(103,'TB test');
+insert into medical_serv(med_svc_id,med_svc_desc)
+values(104,'Blood sugar test');
+
+
+
+
+--INSERT VALUES FOR COVERAGE TABLE
+
+insert into coverage(cov_id,med_svc_id,max_allwd_svc,allwd_chrg_svc,in_network_copay,in_network_coinsr,out_network_copay,out_network_coinsr)
+values('cov100',100,3,100,15,20,30,100);
+insert into coverage(cov_id,med_svc_id,max_allwd_svc,allwd_chrg_svc,in_network_copay,in_network_coinsr,out_network_copay,out_network_coinsr)
+values('cov101',101,1,100,20,10,40,70);
+insert into coverage(cov_id,med_svc_id,max_allwd_svc,allwd_chrg_svc,in_network_copay,in_network_coinsr,out_network_copay,out_network_coinsr)
+values('cov102',102,2,150,25,15,50,80);
+insert into coverage(cov_id,med_svc_id,max_allwd_svc,allwd_chrg_svc,in_network_copay,in_network_coinsr,out_network_copay,out_network_coinsr)
+values('cov103',103,1,50,10,15,30,60);
+insert into coverage(cov_id,med_svc_id,max_allwd_svc,allwd_chrg_svc,in_network_copay,in_network_coinsr,out_network_copay,out_network_coinsr)
+values('cov104',102,2,200,20,10,40,90);
+
+
+--INSERT VALUES FOR INS_PLANS TABLE
+
+insert into ins_plans(plan_id,plan_name,plan_year,cov_id,deductible,max_out_pocket,max_out_pocket_family)
+values('plan0001','PPO','2016','cov100',500,1000,2000);
+insert into ins_plans(plan_id,plan_name,plan_year,cov_id,deductible,max_out_pocket,max_out_pocket_family)
+values('plan0002','EPO','2017','cov102',400,3000,6000);
+insert into ins_plans(plan_id,plan_name,plan_year,cov_id,deductible,max_out_pocket,max_out_pocket_family)
+values('plan0003','EPO Plus','2018','cov101',300,2000,4000);
+insert into ins_plans(plan_id,plan_name,plan_year,cov_id,deductible,max_out_pocket,max_out_pocket_family)
+values('plan0004','PPO Plus','2019','cov103',500,4000,8000);
+insert into ins_plans(plan_id,plan_name,plan_year,cov_id,deductible,max_out_pocket,max_out_pocket_family)
+values('plan0005','PPO Gateway','2015','cov104',500,1500,3000);
+
+
+
+
+--INSERT VALUES FOR POLICY TABLE
+
+insert into policy(policy_id, customer_id, plan_id, plan_year,deductible,max_out_pocket,max_out_pocket_family)
+values('pol1','cus1000','plan0001', '2016',500,1000,2000);
+insert into policy(policy_id, customer_id, plan_id, plan_year,deductible,max_out_pocket,max_out_pocket_family)
+values('pol2','cus1001','plan0001', '2016',500,1000,2000);
+insert into policy(policy_id, customer_id, plan_id, plan_year,deductible,max_out_pocket,max_out_pocket_family)
+values('pol3','cus1010','plan0002', '2017',400,3000,6000);
+insert into policy(policy_id, customer_id, plan_id, plan_year,deductible,max_out_pocket,max_out_pocket_family)
+values('pol3','cus1002','plan0002', '2017',400,3000,6000);
+
+
+
+--INSERT VALUES FOR POLICY DEPENDENT TABLE
+
+insert into policy_dep(policy_id,dep_id,d_email)
+values('pol1','dep1000','jina1@gmail.com');
+insert into policy_dep(policy_id,dep_id,d_email)
+values('pol2','dep1001','jean6@gmail.com');
+
+
+
+
+--INSERT VALUES FOR PREMIUM TABLE
+
+
+insert into premium (policy_id,annual_rate,rate_level,premium_amt,premium_date)
+values('pol1',100, null , null,sysdate);
+insert into premium (policy_id,annual_rate,rate_level,premium_amt,premium_date)
+values ('pol2',100,null,null,sysdate);
+insert into premium (policy_id,annual_rate,rate_level,premium_amt,premium_date)
+values ('pol2',100,null,null,sysdate);
+
+
+--INSERT VALUES FOR MESSAGE TABLE
+
+insert into message(msg_id,user_id,msg, msg_date)
+values('msg1','cus1000','New account cannot be created as it Already Exists','01-Jan-2013');
+insert into message(msg_id,user_id,msg, msg_date)
+values('msg2','cus1001','User login successful','01-feb-2015');
+
+
+--INSERT VALUES FOR CLAIMS TABLE
+
+insert into claims (claim_id, claim_date   ,plan_id    ,med_svc_id ,status ,Patient   ,policy_id ,provider  ,plan_year ,med_svc_date ,sp_charge ,amt_copay ,deductible ,deductible_paid ,max_out_pocket ,max_out_pocket_paid ,max_out_pocket_family ,max_out_pocket_family_paid ,amt_coinsr ,amt_paid_by_insr ,amt_paid_by_cust ,total_charge_cust ,total_charge_insr )
+values(1,'20-june-2016','plan0001' ,100,null,'cus1000' ,'pol1'   ,'pro1000' ,'2016� ,'20-june-2016', 150 ,  15 ,null , null           ,1000  ,545 ,2000,1020 ,20, null ,null, null , null );           
+           
+insert into claims(claim_id,claim_date ,plan_id ,med_svc_id ,status ,Patient ,policy_id ,provider  ,plan_year ,med_svc_date ,sp_charge ,amt_copay ,deductible ,deductible_paid ,max_out_pocket ,max_out_pocket_paid ,max_out_pocket_family ,max_out_pocket_family_paid ,amt_coinsr ,amt_paid_by_insr ,amt_paid_by_cust ,total_charge_cust ,total_charge_insr )
+ values (2 ,'22-april-2017','plan0002' ,102 ,null,'cus1002' ,'pol3'    ,'pro1000' ,'2017' ,'20-june-2016', 200 ,  15 ,null , null           ,3000 ,    455  ,6000  ,1020 ,20 , null ,null , null, null); 
+
+insert into claims (claim_id,claim_date,plan_id,med_svc_id,status ,Patient,policy_id ,provider  ,plan_year ,med_svc_date,sp_charge ,amt_copay ,deductible ,deductible_paid ,max_out_pocket ,max_out_pocket_paid ,max_out_pocket_family ,max_out_pocket_family_paid ,amt_coinsr ,amt_paid_by_insr ,amt_paid_by_cust ,total_charge_cust ,total_charge_insr )
+ values (3,'2-april-2017','plan0002' ,102,null,'cus1002' ,'pol3'    ,'pro1000' ,'2017','20-june-2016', 200 ,15,null, null,3000,455            ,6000 ,1020 ,20,null,null, null, null,null); 
+
+ insert into claims (claim_id,claim_date     ,plan_id    ,med_svc_id ,status ,Patient   ,policy_id ,provider  ,plan_year ,med_svc_date     ,sp_charge ,amt_copay ,deductible ,deductible_paid ,max_out_pocket ,max_out_pocket_paid ,max_out_pocket_family ,max_out_pocket_family_paid ,amt_coinsr ,amt_paid_by_insr ,amt_paid_by_cust ,total_charge_cust ,total_charge_insr )
+ values (34,'24-april-2017','plan0002' ,102 ,null,'cus1000' ,'pol3'    ,'pro1000' ,'2017','20-june-2016', 200 ,  15 ,null, null           ,3000 ,455,6000,1020 ,20,null,null , null, null); 
+
+
+
+--INSERT VALUES FOR CLAIMS LINE TABLE
+
+insert into claim_line(policy_id ,med_svc_id,med_svc_date   ,patient   ,sp_charge,status,claim_id,provider )
+values ('pol1',100 ,'20-june-2016','cus1000'  ,150      , 'Accepted',1,'pro1000');
+insert into claim_line(policy_id ,med_svc_id,med_svc_date ,patient ,sp_charge,status,claim_id,provider )
+values ('pol3',102 ,'22-april-2017','cus1002',200 , 'Accepted',2,'pro1001');
+
+
+
+  
+--FEATURE 1
+
+set serveroutput on;
+
+Create or replace PROCEDURE user_registration(u_email in varchar2,pwd in varchar2,u_type in varchar2, u_name in varchar2, d_birth in date, gen in varchar2, addr in varchar2, ph in number, dep_on in varchar2, dep_rel in varchar2, p_type in varchar2) IS
+check_email integer;
+BEGIN
+    if (u_email is not null and pwd is not null and u_type is not null and u_name is not null and addr is not null and ph is not null) then /*Filter for null values */
+      Select Count(*) into check_email from users where user_email = u_email; /*checks Email existence in the users table for uniqueness */
+		if check_email > 0 then /* filter if the input email already exists */
+          dbms_output.put_line('New account cannot be created as it Already Exists');
+		elsif check_email = 0 then /* when unique email input from user*/
+			if u_type like 'cus%' then /* filters customer for user type for unique customer id allocation*/
+			  insert into users(user_id,user_email, password, user_type, mail_addr, phone) values ('cus'||cus_reg_seq.NextVal,u_email, pwd, u_type, addr, ph);
+                          insert into customer(cname, cus_id,dob,gender,email) values (u_name,'cus'||cus_reg_seq.currval, d_birth, gen, u_email);
+			  dbms_output.put_line('Customer Account Created Successfully with ID:'||'cus'||cus_reg_seq.currval);
+			elsif u_type like 'dep%' then /* filters dependent for user type for unique dependent id allocation*/
+			  insert into users(user_id,user_email, password, user_type, mail_addr, phone) values ('dep'||dep_reg_seq.NextVal,u_email, pwd, u_type, addr, ph);
+                          insert into dependent(dname,dep_id,dob,gender,email,dependent_on, dependent_relationship) values (u_name,'dep'||dep_reg_seq.currval, d_birth, gen, u_email, dep_on,dep_rel);
+                          dbms_output.put_line('Dependent Account Created Successfully with ID:'||'dep'||dep_reg_seq.currval);
+	 		elsif u_type like 'pro%' then /* filters service provider for user type for unique service provider id allocation*/			   
+			  insert into users(user_id,user_email, password, user_type, mail_addr, phone) values ('pro'||pro_reg_seq.NextVal,u_email, pwd, u_type, addr, ph);
+                          insert into provider(pname,prov_id,email,provider_type) values (u_name,'pro'||pro_reg_seq.currval,u_email, p_type);
+                          dbms_output.put_line('Provider Account Created Successfully with ID:'||'pro'||pro_reg_seq.currval);
+        			else
+			  dbms_output.put_line('Invalid Account Type');
+			end if;
+		else
+			dbms_output.put_line('Invalid Entry');
+		end if;
+	else dbms_output.put_line('Null values found');
+	end if;        
+end;    
+
+
+
+--EXECUTION STATEMENTS FOR FEATURE 1
+
+
+--User already exists
+exec user_registration('harryp@gmail.com','abc@1023','customer','harry','19-oct-1965','male','4650 Aldgate green,Arbutus,Mayland',7322107623,null,null,null);
+exec user_registration('jean6@gmail.com','jkl@2020!','dependent','jean','16-jun-1980','female','4661 Courtney road,Arbutus,Mayland',4567097871,'cus1001','daughter',null);
+exec user_registration('bluecross@gmail.com','jam098@','provider','bluecross',null,null,'4871 Palladi drive,Halethorpe,Mayland',5687432910,null,null,null);
+
+
+
+--New User
+
+exec user_registration('beth2@gmail.com','mno@pq1','customer','beth','23-nov-1960','female','4680 Belwood green,Catonsville,Mayland',1453672089,null,null,null);
+exec user_registration('fred3@gmail.com','rty@pq1','dependent','fred','13-dec-1959','male','4680 Belwood green,Catonsville,Mayland',1890453276,'cus1001','son',null);
+exec user_registration('firstcare@gmail.com','chju@234','provider','firstcare',null,null,'5661 st patrick road,Catonsville,Mayland',1467892098,null,null,'in-network');
+exec user_registration('ruby3@gmail.com','rghy123','dependent','ruby','15-dec-1955','female','4680 Belwood green,Catonsville,Mayland',1890453276,'cus1001','daughter',null);
+
+--Null values found
+
+exec user_registration(null,'rty@pq1','dependent','fred','13-dec-1959','male','4680 Belwood green,Catonsville,Mayland',1890453276,'cus1002','husband',null);
+
+
+
+--FEATURE 2
+
+create or replace Function user_login(c_email in users.user_email%type, c_pwd in users.password%type)
+return number
+as	
+v_pwd users.password%type;
+user_count int;
+begin	
+--checking if the user exist
+select count(*) into user_count from users where user_email = c_email;
+if(user_count!=0) then
+    --fetching password from user table for provided email
+     select password into v_pwd from users where user_email = c_email;
+
+    --checking password
+    if(v_pwd = c_pwd) then
+       return 1;
+    else
+       return 0;
+    end if;
+else return -1;
+end if;
+end;
+
+
+--EXECUTION SCRIPT FOR FEATURE 2
+
+--Successful login
+
+declare
+c_login number;
+begin
+
+--providing email and password
+c_login := user_login('harryp@gmail.com','abc@1023');
+
+--login
+if(c_login = 1) then
+dbms_output.put_line('User has been logged on');
+
+--No login due to wrong password
+elsif(c_login = 0) then
+dbms_output.put_line('password and email are not matching');
+
+--if email does not exist
+else
+dbms_output.put_line('email does not exists');
+end if;
+end;	
+
+
+--Unsuccessful login
+
+
+declare
+c_login number;
+begin
+
+--providing email and password
+c_login := user_login('harryp@gmail.com','ab99999');
+
+--login
+if(c_login = 1) then
+dbms_output.put_line('User has been logged on');
+
+--No login due to wrong password
+elsif(c_login = 0) then
+dbms_output.put_line('password and email are not matching');
+
+--if email does not exist
+else
+dbms_output.put_line('email does not exists');
+end if;
+end;
+
+
+--Email does not exist
+
+declare
+c_login number;
+begin
+
+--providing email and password
+c_login := user_login('har@gmail.com','abc@1023');
+
+--login
+if(c_login = 1) then
+dbms_output.put_line('User has been logged on');
+
+--No login due to wrong password
+elsif(c_login = 0) then
+dbms_output.put_line('password and email are not matching');
+
+--if email does not exist
+else
+dbms_output.put_line('email does not exists');
+end if;
+end;	
+
+
+
+--Feature 3
+
+
+create or replace procedure read_messages(u_id in varchar2,start_date in date)
+as
+cursor msg is select * from message where user_id=u_id and msg_date >= start_date;
+m_id INT;
+usr_id INT;
+message VARCHAR(200);
+m_date DATE;
+begin
+open msg ;
+loop
+fetch msg into m_id,usr_id,message,m_date;
+EXIT WHEN msg%notfound;
+dbms_output.put_line(m_id ||usr_id ||message ||m_date);
+end loop;
+if (message is null) then
+dbms_output.put_line('no records found');
+end if;
+close msg;
+end;
+
+
+--CREATION OF SEQUENCE FOR MESSAGE
+
+
+CREATE SEQUENCE msg_seq START WITH 1;
+
+
+--INSERT VALUES FOR THE MESSAGE 
+
+insert into message(msg_id,user_id,msg,msg_date) values(msg_seq.nextval,'cust0001','user logged in successfully', date '2001-2-27');/* a row is inserted into the message table*/
+
+
+--EXECUTION SCRIPT FOR FEATURE 3
+
+
+set serveroutput on;
+Exec read_messages('1',date '2013-05-01');
+/*The expected output for this statement is that, no record is found*/
+
+--FEATURE 4
+
+
+create or replace procedure add_user_policy(planid in varchar2,p_year in int,cid in varchar2,did in dependenttype)
+is
+check_user number;
+check_policy number;
+check_plan number;
+check_pyear number;
+begin
+if (planid is not null and p_year is not null and cid is not null) then /*Filter for null values  */
+   Select Count(*) into check_user from customer where cus_id = cid;/*checks if valid user */
+   if check_user>0 then
+      Select Count(*) into check_policy from policy where customer_id = cid; 
+  		 if check_policy > 0 then /* policy already added to customer */
+          dbms_output.put_line('Policy already exists for the user');
+      else 
+			   Select Count(*) into check_plan from ins_plans where plan_id = planid; /* checks if valid plan*/
+         if check_plan = 0 then
+           dbms_output.put_line('Invalid plan');
+         else
+           Select Count(*) into check_pyear from ins_plans where plan_id=planid and plan_year = p_year; /* checks if plan year matches plan*/
+             if check_pyear = 0 then
+              dbms_output.put_line('Plan not valid for the year');
+             else
+              insert into policy(policy_id,customer_id,plan_id,plan_year,deductible,max_out_pocket,max_out_pocket_family)
+              values('pol'||policy_seq.nextval,cid,planid,p_year,(select deductible from ins_plans where plan_id = planid),(select max_out_pocket from ins_plans where plan_id = planid),(select max_out_pocket_family from ins_plans where plan_id = planid));
+             for i in 1..did.count loop
+              insert into policy_dep(policy_id,dep_id,d_email)
+              values('pol'||policy_seq.currval,dependenttype(did(i)),(select email from dependent where dep_id = did(i)));
+              end loop;
+              insert into message(msg_id,user_id,msg,msg_date)
+              values('msg'||msg_seq.nextval,cid,'customer has enrolled into pol'||policy_seq.currval,sysdate);
+             end if;
+         end if;
+         end if;
+      else
+         dbms_output.put_line('invalid user');
+      end if;
+      else
+      dbms_output.put_line('enter valid inputs');
+    end if;
+end;
+
+
+--EXECUTION SCRIPT FOR FEATURE 4
+
+--Policy already added to customer
+
+execute add_user_policy('plan0005',2015,'cus1000',dependenttype('dep1000'));
+
+
+--Adding the customer and his dependents to policy table
+
+execute add_user_policy('plan0003',2018,'cus1001',dependenttype('dep1001','dep1002'));
+/*will add a dependent to the  customer*/
+
+
+--Plan not valid for the year
+
+execute add_user_policy('plan0001',2015,'cus1002',dependenttype('dep1000'));
+/* will display the output as the plan is not valid for the year*/
+
+
+--Invalid User
+
+execute add_user_policy('plan0001',2015,'cus1004',dependenttype('dep1000'));
+
+/*it will show that the user is an invalid user*/
+
+--message inserted into message table
+
+select * from message;
+
+
+
+--FEATURE 5
+
+create or replace procedure add_dependent_policy(polid in varchar2,depid in dependenttype)
+is
+check_dep number;
+check_policy number;
+check_pol number;
+begin
+  for i in 1..depid.count loop
+if (polid is not null and depid(i) is not null) then /*Filter for null values  */
+   Select Count(*) into check_dep from dependent where dep_id = depid(i);
+   if check_dep>0 then
+      Select Count(*) into check_policy from policy_dep where policy_id=polid and d_email = (select email from dependent where dep_id = depid(i)) ; /*checks if dependent exists in policy_dep table */
+  		 if check_policy > 0 then /* filter if dependent is already added to policy */
+          dbms_output.put_line('Policy already exists for the dependent');
+          else
+           Select Count(*) into check_pol from policy where policy_id = polid; 
+         if check_pol = 0 then
+           dbms_output.put_line('Invalid policy ID');
+      else 		         
+              insert into policy_dep(policy_id,dep_id,d_email)
+              values(polid,dependenttype(depid(i)),(select email from dependent where dep_id = depid(i)));
+              insert into message(msg_id,user_id,msg,msg_date)
+              values('msg'||msg_seq.nextval,depid(i),'dependent has been added to the policy'|| polid,sysdate);
+             end if;
+             end if;
+           else
+            dbms_output.put_line('invalid user');
+         end if;
+      else
+         dbms_output.put_line('enter valid inputs');
+      end if;
+end loop;
+end;
+
+
+
+
+--EXECUTION SCRIPT FOR FEATURE 5
+
+
+--Adding the dependent to policy_dep table
+
+exec add_dependent_policy('pol2',dependenttype('dep1003'));
+
+
+--Policy already added to dependent
+
+exec add_dependent_policy('pol2',dependenttype('dep1001'));
+
+--Invalid Policy
+
+exec add_dependent_policy('pol2',dependenttype('dep1001'));
+
+--Invalid dependent
+
+exec add_dependent_policy('pol2',dependenttype('dep1009'));
+
+--message inserted into message table
+
+select * from message;
+
+
+
+--FEATURE 6
+
+
+create or replace procedure remove_dependent_policy(polid in varchar2,d_name in varchar2)
+is
+check_dep number;
+check_policy number;
+begin
+
+if (polid is not null and d_name is not null) then /*Filter for null values  */
+   Select Count(*) into check_dep from dependent where dname = d_name;
+   if check_dep>0 then
+      Select Count(*) into check_policy from policy_dep , dependent  where d_email = (select email from dependent where dname = d_name) and policy_id=polid and dname = d_name; /* */
+  		 if check_policy > 0 then /* filter if the input email already exists */
+          delete from policy_dep where d_email = (select email from dependent where dname = d_name);
+          insert into message(msg_id,user_id,msg,msg_date)
+          values('msg'||msg_seq.nextval,(select dep_id from dependent where dname = d_name),d_name||' has been removed from the policy'|| polid,sysdate);
+          else
+           dbms_output.put_line('Invalid policy ID');
+       end if;
+           else
+            dbms_output.put_line('invalid user');
+         end if;
+      else
+         dbms_output.put_line('enter valid inputs');
+      end if;
+end;
+
+
+--EXECUTION SCRIPT FOR FEATURE 6
+
+--Dependent removed
+
+       execute remove_dependent_policy('pol1','jina');
+
+--Invalid User
+
+       execute remove_dependent_policy('pol1','ruth');
+
+--NULL values
+
+       execute remove_dependent_policy('pol1',null);
+
+--Invalid Policy
+
+       execute remove_dependent_policy('pol9','jina');
+
+
+
+
+--FEATURE 7
+
+
+show error;
+create or replace procedure premium_computation(p_id in varchar2)
+is
+rate_level_p number;
+price number;
+n number:=0;
+did1 varchar2(100);
+dr1 varchar2(100);
+dr2 varchar2(100);
+d3 number;
+premium number;
+x number:=0;
+z number;
+
+CURSOR c1 IS select count(*) from policy_dep where policy_id=p_id;
+CURSOR c2 IS select dep_id  from policy_dep where policy_id=p_id; 
+CURSOR c3 IS select dependent_relationship  from dependent where dep_id=did1;
+CURSOR c4 IS select count(*) from policy_dep p,dependent d where p.dep_id=d.dep_id and p.policy_id=p_id and d.dependent_relationship='spouse';
+CURSOR c5 IS select annual_rate into price from premium where policy_id=p_id;
+CURSOR c6 IS select count(*) from policy where policy_id=p_id ;
+
+begin
+
+open c1; -- open cursor
+  fetch c1 into n; -- fetch
+Close c1;
+
+open c2; -- open cursor
+  fetch c2 into did1; -- fetch
+Close c2;
+
+open c3; -- open cursor
+  fetch c3 into dr1; -- fetch
+Close c3;
+
+open c4; -- open cursor
+  fetch c4 into d3; -- fetch
+Close c4;
+
+open c5; -- open cursor
+  fetch c5 into price; -- fetch
+Close c5;
+
+open c6; -- open cursor
+  fetch c6 into x; -- fetch
+Close c6;
+
+if x=0 then
+dbms_output.put_line('Policy is not exist');
+else
+if n=0 then -- means this customer has no dependents
+rate_level_p:=1;
+dbms_output.put_line('rate_level:=1');
+
+elsif n=1 then
+if dr1 = 'spouse' then 
+rate_level_p:=2;
+dbms_output.put_line('rate_level:=2');
+
+else 
+rate_level_p:=3;
+dbms_output.put_line('rate_level:=3');
+end if;
+
+elsif n>2 then
+if d3=1 then ---is one a spouse
+rate_level_p:=4;
+dbms_output.put_line(' rate_level:=4');
+else
+rate_level_p:=3;
+dbms_output.put_line(' rate_level:=3');
+end if;
+end if;
+update premium  set rate_level=rate_level_p where policy_id=p_id;
+update premium  set premium_amt=rate_level*annual_rate where policy_id=p_id;
+select premium_amt into z from premium  where policy_id=p_id;
+dbms_output.put_line('permium amount for the policy is '|| z);
+end if; 
+end;
+
+
+--EXECUTION SCRIPT FOR FEATURE 7
+
+--level_rate 1 
+    execute premium_computation('pol3');
+
+--Level rate 3
+     execute premium_computation('pol2');
+
+--policy is not exist
+     execute premium_computation('pol8');
+ 
+
+
+
+--FEATURE 8
+
+show errors;
+ create or replace procedure lookup_coverage2(po_id in policy.policy_id%type,med_desc in medical_serv.med_svc_desc%type)
+  IS
+
+  CURSOR c1 IS select policy_id,p.plan_id,med_svc_desc,c.cov_id,c.med_svc_id,max_allwd_svc,allwd_chrg_svc,in_network_copay,in_network_coinsr,out_network_copay,out_network_coinsr
+  from coverage c,ins_plans i,medical_serv m,policy p
+  where c.cov_id=i.cov_id and m.med_svc_id=c.med_svc_id and i.plan_id=p.plan_id and p.policy_id=po_id and m.med_svc_desc LIKE med_desc;
+
+  --x c1%rowtype;
+  y int;
+  x_policy_id varchar2(100);
+  x_plan_id varchar2(100);
+  x_cov_id varchar2(100);
+  x_med_svc_id varchar2(100);
+  x_med_svc_desc varchar(100);
+  x_max_allwd_svc number ;
+  x_allwd_chrg_svc number  ;
+  x_in_network_copay  number ;
+  x_in_network_coinsr number ;
+  x_out_network_copay number ;
+  x_out_network_coinsr number ;
+
+   begin
+   y:=0;
+open c1; -- open cursor
+loop
+	fetch c1 into x_policy_id,x_plan_id,x_cov_id,x_med_svc_id,x_med_svc_desc,x_max_allwd_svc,x_allwd_chrg_svc,x_in_network_copay,x_in_network_coinsr,x_out_network_copay,x_out_network_coinsr; -- fetch
+	if c1%found then --- if is needed to maintain y value
+	y:=1;
+	dbms_output.put_line('The coverage details for the service you choosed');
+	dbms_output.put_line('Policy ID: '|| x_policy_id);
+	dbms_output.put_line('Plan ID: '|| x_plan_id);
+	dbms_output.put_line('Coverage ID: '||x_cov_id);
+	dbms_output.put_line('Medical service ID: '||x_med_svc_id);
+	dbms_output.put_line('Medical service description: '||x_med_svc_desc);
+	dbms_output.put_line('Maximum allowed charge for the service: '||x_max_allwd_svc);
+	dbms_output.put_line('Minimum allowed charge for the service: '||x_allwd_chrg_svc);
+	dbms_output.put_line('In-network copay: '||x_in_network_copay);
+	dbms_output.put_line('In-network co-insurance: '||x_in_network_coinsr);
+	dbms_output.put_line('out-network copay: '||x_out_network_copay);
+	dbms_output.put_line('Out-network co-insurance: '||x_out_network_coinsr);-- print
+	end if;
+	exit when c1%NOTFOUND;
+    
+	END LOOP;
+	
+	 if y!=1  ---this condition is to make sure that nothing was printed to the user as result, so we can print the following out put
+               then
+               dbms_output.put_line('This service is not available under the policy you choosed');
+               end if; 
+Close c1; 
+End;
+
+
+
+--test cases for feature 8
+
+-- if there is a valid execution
+execute lookup_coverage2('pol1','office visit');
+
+--service is not available under the policy 
+execute lookup_coverage2('pol1','pre checkup');
+
+
+
+--FEATURE 9
+
+
+create or replace procedure add_claims(provider_id in varchar2,pol_id in varchar2,pat_name in varchar2,serv_date in date,serv_id in varchar2,prov_charge in number)
+is
+usr varchar2(10);
+task1 boolean;
+task2 boolean;
+task3 boolean;
+task4 number;
+task5 number;
+task6 number;
+task7 number;
+task8 boolean;--svc_id varchar2(10);
+--pid  varchar2(10);
+--pro_id  varchar2(10);
+--cdate  date;
+begin
+dbms_output.put_line('sornam');
+if (provider_id is not null and pol_id is not null and pat_name is not null and serv_date is not null and serv_id is not null and prov_charge is not null)
+then
+dbms_output.put_line('not null');
+select cus_id into usr from claim_line cl,customer cus where  cl.patient=cus.cus_id and cus.cname=pat_name;
+dbms_output.put_line('User:');
+if usr is not null then
+--if usr is  null then
+--select dep_id into usr from claim_line cl,policy pol,dependent dep where pol.policy_id=pol_id and cl.med_svc_id=serv_id and cl.sp_charge=prov_charge and cl.policy_id=pol.policy_id and cl.patient=dep.dep_id and dep.dname=pat_name;
+
+/*calling other procedures*/
+/* first task*/
+ --boolean x:=add_claim(provider_id in varchar2,pol_id in varchar2,Patient_name in varchar2);
+ /*task1:= check_claim(provider_id,pol_id,usr,serv_date,serv_id);
+ if task1=TRUE then
+ dbms_output.put_line('first task completed');*/
+ task2:=service_covered(serv_id,pol_id,usr);
+    if task2= TRUE then
+       dbms_output.put_line('second task completed');
+	   task3:= check_claim(serv_id,pol_id,provider_id,usr,serv_date) ;
+     if task3=TRUE then
+      dbms_output.put_line('third task completed');
+	    task4:= adjust_charge(serv_id ,prov_charge,serv_date,usr) ;
+      if task4!=0 then
+		  dbms_output.put_line('fourth task completed');
+		     task5:= amt_patient(pol_id ,serv_id,usr ,serv_date ,prov_charge );
+         if task5!=0 then
+			  dbms_output.put_line('fifth task completed');
+			task6:=amt_patient_2(pol_id,serv_id ,usr,serv_date ,task5);
+			dbms_output.put_line('task6');
+      if task6>0 then
+			dbms_output.put_line('sixth task completed');
+		task7:=amt_patient_3(pol_id ,task5,task6)	;
+      if task7!=0 then
+      dbms_output.put_line('seventh task completed');
+	    	task8:=insurance_computation(task7,task4,serv_id ,serv_date,usr,prov_charge);
+		if task8=TRUE then
+		dbms_output.put_line('eighth task completed');
+	
+  					  -- if amt_patient
+     end if;
+     end if;
+    end if; 
+end if;
+end if;
+--end if;
+end if;
+end if;
+else
+dbms_output.put_line('invalid name');
+end if;
+else
+dbms_output.put_line('enter inputs correctly');
+end if;/*patient name will be converted into patient id*/
+end;
+
+
+
+--FEATURE_9 TASK 1
+create or replace function check_service(provider_id in varchar2,pol_id in varchar2,usr in varchar2,serv_date in date,serv_id in varchar2)
+return boolean
+is
+cust number;
+dep number;
+policy number;
+provider number;
+pat number;serv_val number;
+i integer;
+begin
+--provider and policy exist 
+select count(*) into policy from policy where policy_id=pol_id;
+select count(*) into provider from provider where prov_id=provider_id;
+dbms_output.put_line('policy');
+select count(*) into cust from customer where cus_id=usr;
+select count(*) into dep from dependent where dep_id=usr;
+if(policy !=0 and provider !=0) then
+select count(*) into pat from policy,customer where policy_id=pol_id and customer.cus_id=usr and policy.customer_id=customer.CUS_ID;
+dbms_output.put_line('policy and pro');
+select count(claim_id) into serv_val from claim_line cl,policy po where cl.med_svc_id=serv_id and cl.med_svc_id=serv_id and po.policy_id=cl.policy_id and 
+(extract(year from cl.med_svc_date))<= cast ( plan_year as integer);
+dbms_output.put_line('serv date'||serv_val);
+dbms_output.put_line('pat'||pat);--i:=extract(year from serv_date);
+--select plan_year into serv_val from claim_line cl,policy po where cl.med_svc_id=serv_id and cl.med_svc_id=serv_id and po.policy_id=cl.policy_id ;
+  if (pat !=0 and serv_val >0 ) then
+  dbms_output.put_line('task1 success');
+  return true;
+  
+  else 
+  return false;
+end if;
+else
+  return false;
+ end if;
+ end;
+  
+
+--FEATURE_9 TASK2
+
+
+create or replace function service_covered(svc_id in varchar2,pol_id in varchar2,usr in varchar2)
+return boolean
+is
+svc number;
+allwd_svc number;                                                             --maximum allowed services
+begin
+svc:=0;     
+allwd_svc:=0;
+select count(claim_line.med_svc_id) into svc from claim_line,coverage cov,ins_plans plan,policy pol where claim_line.med_svc_id=svc_id and claim_line.med_svc_id=cov.med_svc_id 
+and cov.cov_id=plan.cov_id and plan.plan_id=pol.plan_id and pol.policy_id=pol_id and claim_line.patient=usr;
+
+if svc>0 then                                                                 --checked for same service for same user on same date
+select max_allwd_svc into allwd_svc from coverage where med_svc_id=svc_id;
+  if svc<=allwd_svc then                                                      --checked if service is not more than maximum allowed service
+  dbms_output.put_line('service approved');
+ return true ;
+  else
+  dbms_output.put_line('service denied');
+  insert into message(msg_id,user_id,msg,msg_date)
+  values (seq_msg.nextval,usr,'Max allwd service exceeded. So service denied',sysdate);
+  return false;
+  end if;
+else
+dbms_output.put_line('service denied');
+  insert into message(msg_id,user_id,msg,msg_date)
+  values (seq_msg.nextval,usr,'service denied:Service is not covered in policy',sysdate);
+  return false;
+end if;
+end;
+
+
+--FEATURE_9 TASK_3
+
+create or replace function check_claim(serv_id in varchar2,pol_id in varchar2,provider_id in varchar2,usr in varchar2,serv_date in date)
+ return boolean
+ as
+ check_claim number;
+begin
+dbms_output.put_line('Task 3 entering');
+select count(*) into check_claim from claim_line where
+med_svc_id=serv_id and patient=usr and MED_SVC_DATE=serv_date and STATUS='Accepted';
+dbms_output.put_line('Task 3'||check_claim);
+if check_claim=1 then
+  return true;
+else
+  return false;
+insert into message(msg_id,user_id,msg,msg_date)
+values(seq_msg.nextval,usr,'claim rejected:duplicate filing of the claim',sysdate);
+end if;
+end;
+
+
+--FEATURE_9 TASK_4
+
+
+create or replace function adjust_charge(serv_id in varchar2,prov_charge in number,serv_date in date,usr in varchar2)
+return number
+is 
+chrg number;
+allwd_chrg number;
+begin
+select allwd_chrg_svc into allwd_chrg
+from claim_line,coverage
+where claim_line.med_svc_id=serv_id and claim_line.med_svc_id=coverage.med_svc_id and claim_line.patient=usr and claim_line.MED_SVC_DATE=serv_date;
+if (allwd_chrg > prov_charge) then
+chrg:=prov_charge;
+dbms_output.put_line(chrg);
+return chrg;
+else
+chrg:=allwd_chrg;
+return chrg;
+end if;
+end;
+
+
+
+--FEATURE_9 TASK_5
+
+create or replace function amt_patient(pol_id in varchar2,serv_id in varchar2,usr in varchar2,serv_date in date,chrg in number)
+return number
+is
+amt_patient number;
+d_amt number;d_paid number;ded number;
+begin
+select deductible,deductible_paid into d_amt,d_paid
+from claims
+where policy_id=pol_id and med_svc_id=serv_id and patient=usr and med_svc_date=serv_date ;
+ded:=d_amt-d_paid;
+dbms_output.put_line('ded' || ded);
+dbms_output.put_line('testing');
+if ded>0 then
+dbms_output.put_line('ded is remaining');
+amt_patient:=ded+chrg;
+return amt_patient;
+else
+amt_patient:=chrg;
+dbms_output.put_line('there is no ded');
+return amt_patient;
+end if;
+end;
+
+
+
+--FEATURE_9 TASK_6
+
+create or replace function amt_patient_2(pol_id in varchar2,serv_id in varchar2,usr in varchar2,serv_date in date,amt_patient in number)
+return number
+is
+--d_amt number;
+amt_patient_2 number;
+s number;
+a number;
+b number;
+c number;
+d number;
+e number;
+out_pocket_due number;
+out_pocket_family_due number;
+begin
+dbms_output.put_line('6th task');
+select amt_copay into a
+from claims
+where policy_id=pol_id and policy_id=pol_id and med_svc_id=serv_id and patient=usr and med_svc_date=serv_date;
+dbms_output.put_line('a'||a);
+select max_out_pocket into b
+from claims
+where policy_id=pol_id and policy_id=pol_id and med_svc_id=serv_id and patient=usr and med_svc_date=serv_date;
+dbms_output.put_line('b'||b);
+select max_out_pocket_paid into c
+from claims
+where policy_id=pol_id and policy_id=pol_id and med_svc_id=serv_id and patient=usr and med_svc_date=serv_date;
+dbms_output.put_line('c'||c);
+select max_out_pocket_family into d
+from claims
+where policy_id=pol_id and policy_id=pol_id and med_svc_id=serv_id and patient=usr and med_svc_date=serv_date;
+select max_out_pocket_family_paid into e
+from claims
+where policy_id=pol_id and policy_id=pol_id and med_svc_id=serv_id and patient=usr and med_svc_date=serv_date;
+dbms_output.put_line('e'||e);
+out_pocket_due:=b-c;
+out_pocket_family_due:=d-e;
+dbms_output.put_line(out_pocket_family_due);
+--case amt_patient_2 
+/*
+if a<=amt_patient and a<=out_pocket_due and a<=out_pocket_family_due then amt_patient_2:=a;
+    elsif amt_patient<a and amt_patient<out_pocket_due and amt_patient<out_pocket_family_due then amt_patient_2:=amt_patient;
+	 elsif out_pocket_due<a and out_pocket_due<amt_patient and out_pocket_due<out_pocket_family_due then amt_patient_2:=out_pocket_due;
+	 --when out_pocket_family_due<a and out_pocket_family_due<amt_patient and out_pocket_family_due<out_pocket_due then out_pocket_family_due
+	 dbms_output.put_line( '1'||amt_patient_2);
+   return amt_patient_2;
+	 else amt_patient_2:=out_pocket_family_due;
+	 dbms_output.put_line( '2'||amt_patient_2);
+   return amt_patient_2;
+	 end if ;*/
+   s:=least(a,amt_patient,out_pocket_due,out_pocket_family_due);
+   dbms_output.put_line(s);
+   return s;
+end;
+
+
+
+
+--FEATURE_9 TASK_7
+
+
+
+create or replace function amt_patient_3(pol_id in varchar2,amt_patient in number,amt_patient_2 in number)
+return number
+is
+--d_amt number;
+amt_patient_3 number;
+a number;
+b number;
+c number;
+d number;
+e number;
+out_pocket_due number;
+out_pocket_family_due number;
+coinsr_rate number;
+coinsr_amount number;
+begin
+dbms_output.put_line('amt_coinsr');
+select AMT_COINSR into coinsr_rate
+from claims where policy_id=pol_id;
+select max_out_pocket into a
+from claims
+where policy_id=pol_id;
+select max_out_pocket_paid into b
+from claims
+where policy_id=pol_id;
+select max_out_pocket_family into c
+from claims
+where policy_id=pol_id;
+select max_out_pocket_family_paid into d
+from claims
+where policy_id=pol_id;
+out_pocket_due:=a-b;
+out_pocket_family_due:=c-d;
+--case amt_patient_2
+coinsr_amount:=amt_patient_2*coinsr_rate;
+dbms_output.put_line(coinsr_amount);
+amt_patient_3:=least(coinsr_amount,out_pocket_due,out_pocket_family_due);
+/*if coinsr_amount<=out_pocket_due and coinsr_amount<=out_pocket_family_due
+then amt_patient_3:=coinsr_amount;
+elsif out_pocket_due<=coinsr_amount and out_pocket_due<=out_pocket_family_due
+then amt_patient_3 :=out_pocket_due;
+else
+  amt_patient_3:=out_pocket_family_due;
+	 end if ;*/
+   return amt_patient_3;
+end;
+
+
+--FEATURE_9 TASK_8
+
+create or replace function insurance_computation(task7 in number,task4 in number,serv_id in varchar2,serv_date in date,usr in varchar2,prov_charge in number)
+return boolean
+is
+serv_desc varchar2(50);
+allwd_charge number;
+copay number;ded number;ded_paid number;coins number;
+ded_topay number;
+amt_ins number;
+begin
+select AMT_COPAY into copay from claims where med_svc_date=serv_date and med_svc_id=serv_id and patient=usr;
+select med_svc_desc into serv_desc from medical_serv m,claims c where c.med_svc_id=serv_id and m.med_svc_id=c.med_svc_id;
+select ALLWD_CHRG_SVC into allwd_charge from coverage co,claims c where c.med_svc_id=serv_id and co.med_svc_id=c.med_svc_id;
+select deductible,deductible_paid,AMT_COINSR into ded,ded_paid,coins 
+from claims  where med_svc_date=serv_date and med_svc_id=serv_id and patient=usr;
+ded_topay:=ded-ded_paid;
+amt_ins:=task4-task7;
+if ded_topay>0 then
+insert into message(MSG_ID,USER_ID,MSG,MSG_DATE)
+values(msg_seq.nextval,usr,serv_id||serv_date||copay||serv_desc||prov_charge||allwd_charge||ded_topay||coins||amt_ins||task7,sysdate);
+else
+insert into message(MSG_ID,USER_ID,MSG,MSG_DATE)
+values(msg_seq.nextval,usr,serv_id||serv_date||copay||serv_desc||prov_charge||allwd_charge||coins||amt_ins||task7,sysdate);
+end if;
+return true;
+end;
+
+
+--The sample of some outputs of feature 9
+--correct output
+exec add_claims ('pro1000','pol1','harry',to_date('20-06-2016','dd-mm-yyyy'),100,150);
+
+--error handling if input is null
+exec add_claims ('pro1000','pol1','harry',to_date('20-06-2016','dd-mm-yyyy'),100,150);
+
+
+
+
+
+
+
+
+--FEATURE 10
+
+create or replace procedure claim_search(usr in varchar2,start_date in date,end_date in date)
+is
+cl_id varchar2(10);
+prov varchar2(10) ;
+pat varchar2(10);
+serv_date date;
+cursor c1 is select claim_id,provider,patient,med_svc_date from claims where med_svc_date between start_date and end_date and patient=usr;
+begin
+open c1;
+loop
+fetch c1 into cl_id,prov,pat,serv_date;
+	exit when c1%notfound;
+	dbms_output.put_line(cl_id||prov||pat||serv_date);
+End loop;
+END;
+
+
+--EXECUTION FOR FEATURE 10
+exec claim_search('cus1002',date '2016-06-20',date '2016-06-20');
+
+
+
+
+--FEATURE 11
+
+
+create or replace procedure claim_search(usr in varchar2,start_date in date,end_date in date)
+is
+cl_id varchar2(10);
+prov varchar2(10) ;
+pat varchar2(10);
+serv_date date;
+cursor c1 is select claim_id,provider,patient,med_svc_date from claims where med_svc_date between start_date and end_date and patient=usr;
+begin
+open c1;
+loop
+fetch c1 into cl_id,prov,pat,serv_date;
+	exit when c1%notfound;
+	dbms_output.put_line(cl_id||prov||pat||serv_date);
+End loop;
+END;
+
+
+--EXECUTION OF FEATURE11
+
+exec claim_search('cus1002',date '2016-06-20',date '2016-06-20');
+
+
+--FEATURE 12
+
+create or replace procedure total_amount
+is
+charge number;ded number;copay number;coinsr number;out_packet number;out_packet_family number;
+cursor c1 is select sum(AMT_PAID_BY_CUST),sum(DEDUCTIBLE),sum(AMT_COPAY),sum(AMT_COINSR),sum(MAX_OUT_POCKET),sum(MAX_OUT_POCKET_FAMILY)
+from claims
+group by extract(year from med_svc_date);
+begin
+open c1;
+loop
+fetch c1 into charge ,ded,copay,coinsr,out_packet,out_packet_family;
+exit when c1%notfound;
+dbms_output.put_line(charge||ded||copay ||coinsr||out_packet ||out_packet_family);
+end loop;
+end;
+
+--EXECUTION STATEMENT FOR FEATURE 12
+
+exec total_amount;
+
+
+
+--FEATURE 13
+
+
+create or replace procedure display_insr_stats
+  IS 
+ CURSOR C1 IS select count(user_email) from users ;
+ CURSOR C2 IS select count(*) from provider where provider_type='In Network';
+ CURSOR C3 IS select plan_year,count(*) from policy where plan_year>EXTRACT(year from sysdate)-5 group by plan_year;
+ CURSOR C4 IS select EXTRACT(year from claim_date),count(*) from claims where claim_date>sysdate-interval'5'year group by EXTRACT(year from claim_date);
+ CURSOR C5 IS select EXTRACT(year from premium_date),sum(premium_amt) from premium where premium_date > sysdate-interval'5'year group by EXTRACT(year from premium_date);
+ CURSOR C6 IS select EXTRACT(year from claim_date),sum(total_charge_INSR) from claims where status='Accepted' and claim_date>sysdate-interval'5'year group by EXTRACT(year from claim_date);
+ CURSOR C7 IS select EXTRACT(year from claim_date),sum(total_charge_cust) from claims where status='Accepted' and claim_date>sysdate-interval'5'year group by EXTRACT(year from claim_date);
+    user_e int;
+  provider_t int;
+  c3_year varchar(20);
+  c3_total_p varchar(20);
+    c4_year varchar(20);
+  c4_total_c varchar(20);
+  c5_year varchar(20);
+  c5_total_pm varchar(20); 
+    c6_year varchar(20);
+  c6_total_pa_i varchar(20); 
+    c7_year varchar(20);
+  c7_total_pa_p varchar(20); 
+ begin
+ open c1; 
+loop
+  fetch c1 into user_e; 
+  exit when c1%NOTFOUND; 
+  dbms_output.put_line('Total number of user customers' || user_e);
+  END LOOP;
+Close c1; 
+
+open c2; 
+loop
+  fetch c2 into provider_t; 
+  exit when c2%NOTFOUND; 
+  dbms_output.put_line('Total number of innetwork provider' || provider_t);
+  END LOOP;
+Close c2; 
+
+open c3; 
+dbms_output.put_line('Total number of policies in the last 5 years:' );
+loop
+  fetch c3 into c3_year,c3_total_p; 
+  exit when c3%NOTFOUND; 
+  dbms_output.put_line('year:    ' ||c3_year||'Total number of policies'||c3_total_p );
+  END LOOP;
+Close c3; 
+
+open c4; 
+dbms_output.put_line('Total number of claims submitted in the last 5 years:' );
+loop
+  fetch c4 into c4_year,c4_total_c; 
+  exit when c4%NOTFOUND; 
+  dbms_output.put_line('year:  ' ||c4_year||'  Total number of policies:    '||c4_total_c);
+  END LOOP;
+Close c4; 
+
+open c5; 
+dbms_output.put_line('Total number of primium received in the last 5 years:' );
+loop
+  fetch c5 into c5_year,c5_total_pm; 
+  exit when c5%NOTFOUND; 
+dbms_output.put_line('year:  ' ||c5_year||'   Total number of policies:     '||c5_total_pm);
+  END LOOP;
+Close c5; 
+
+open c6; 
+dbms_output.put_line('Total number of payment made by the insurance company in the last 5 years:' );
+dbms_output.put_line('' );
+loop
+  fetch c6 into c6_year,c6_total_pa_i; 
+  exit when c6%NOTFOUND; 
+dbms_output.put_line('year: ' ||c6_year||'   Total number of payment made by the insurance company:   '||c6_total_pa_i);
+dbms_output.put_line('' );
+  END LOOP;
+Close c6; 
+
+open c7; 
+dbms_output.put_line('Total number of payment made by patients in the last 5 years:      ' );
+dbms_output.put_line('' );
+loop
+  fetch c7 into c7_year,c7_total_pa_p; 
+  exit when c7%NOTFOUND; 
+  dbms_output.put_line('year :' ||c7_year||'   Total number of payment made by patients:     '||c7_total_pa_p);
+  END LOOP;
+Close c7; 
+
+
+ End;
+
+--EXECUTION SCRIPT FOR FEATURE 13
+
+execute display_insr_stats;
+
+
+
+--FEATURE 14
+show error;
+create or replace procedure usage_statistics(K in number)
+  is
+CURSOR c1 IS select med_svc_id As"service ID",EXTRACT(year from claim_date)As "year",count(med_svc_id)As"Number of services in claims",(count( DISTINCT Patient)*100/(select count(user_id)from users where user_type!='provider'))As "Percentage of patients " from claims where claim_date>sysdate-interval'5'year group by EXTRACT(year from claim_date),med_svc_id;
+CURSOR c2 IS select o.med_svc_id from medical_serv o,claims c where o.med_svc_id not in (select med_svc_id from claims) group by o.med_svc_id ;
+CURSOR c3 IS select med_svc_id As"service ID",EXTRACT(year from claim_date)As "year",count(med_svc_id)As"Number of services in claims"from claims where claim_date>sysdate-interval'5'year group by EXTRACT(year from claim_date),med_svc_id order by count(med_svc_id) desc;
+CURSOR c4 IS select med_svc_id As"service ID",EXTRACT(year from claim_date)As "year",(count( DISTINCT Patient)*100/(select count(user_id)from users where user_type!='provider'))As "Percentage of patients " from claims where claim_date>sysdate-interval'5'year group by EXTRACT(year from claim_date),med_svc_id order by(count( DISTINCT Patient)*100/(select count(user_id)from users where user_type!='provider')) desc;
+ 
+
+list_no number:=k;
+count_3 number:=0;
+count_4 number:=0;
+
+svc_id_1 number;
+year_1 varchar(20);
+claims_no_1 number;
+percentage_1 number;
+
+svc_not_used number;
+
+svc_id_3 number;
+year_3 varchar(20);
+claims_no_3 number;
+percentage_3 number;
+
+
+svc_id_4 number;
+year_4 varchar(20);
+claims_no_4 number;
+percentage_4 number;
+
+begin
+
+ open c1; 
+ dbms_output.put_line('Total number of services and percentage of patient usage');
+loop
+  fetch c1 into svc_id_1,year_1,claims_no_1,percentage_1; 
+  
+  dbms_output.put_line('service Id:  ' ||svc_id_1||'  year:  ' ||year_1||'  Number of services in claims:  '|| claims_no_1||'  percentage of patients:  '||percentage_1);
+  exit when c1%NOTFOUND; 
+  END LOOP;
+   dbms_output.put_line(' ...... ');
+Close c1; 
+
+ open c2; 
+ dbms_output.put_line('Total number of services have not been used in last 5 years');
+loop
+  fetch c2 into svc_not_used; 
+  exit when c2%NOTFOUND; 
+  dbms_output.put_line(svc_not_used);
+  END LOOP;
+    dbms_output.put_line(' ..... ');
+Close c2;
+
+ open c3; 
+ dbms_output.put_line('Top'||list_no||' of most claim services ');
+loop
+  fetch c3 into svc_id_3,year_3,claims_no_3; 
+  count_3:=count_3+1; 
+  
+  dbms_output.put_line('service Id:  ' ||svc_id_3||'  year:  ' ||year_3||'  Number of services in claims:  '|| claims_no_3);
+  exit when c3%NOTFOUND or count_3=list_no; 
+  END LOOP;
+  if count_3<list_no then
+  dbms_output.put_line('Sorry,There is only  '||count_3||'  results in claims table');
+  end if;
+    dbms_output.put_line(' ...... ');
+Close c3;
+
+
+ open c4; 
+ dbms_output.put_line('Top'||list_no||'services with most percentage usage');
+loop
+  fetch c4 into svc_id_4,year_4,percentage_4; 
+  count_4:=count_4+1; 
+  
+  dbms_output.put_line('service Id:  ' ||svc_id_4||'  year:  ' ||year_4||'  percentage of patients:  '||percentage_4);
+  exit when c4%NOTFOUND or count_4=list_no; 
+  END LOOP;
+  if count_4<list_no then
+  dbms_output.put_line('Sorry,There is only  '||count_4||'  results in claims table');
+  end if;
+    dbms_output.put_line(' ...... ');
+Close c4;
+
+
+End;
+
+--EXECUTION SCRIPT FOR FEATURE 14
+
+--usage statistics + statistics for the most 2 used services
+execute usage_statistics(2);
+
+--usage statistics + statistics for the most 5 used services(input exceed the number of record available)
+execute usage_statistics(5);
+
+--FEATURE 15
+show error;
+create or replace procedure suspicious_pattern(x in number,y in number)
+is
+year_1 int;
+sum_ins_c int; --to store sum of current year 
+sum_ins_p int;--to store sum of previous year 
+prev_year int:=0;
+avg_current int;
+avg_last int;
+maxi int;
+sum_result int;
+prov_fr varchar2(10);
+prov_n_use int;
+prov_max_use int;
+p_c2 varchar2(10);
+prev_year_count int;
+
+cursor c1 is select plan_year,sum(TOTAL_CHARGE_INSR)from claims group by plan_year;
+cursor c2 is select patient,sum(TOTAL_CHARGE_INSR)/count( DISTINCT Patient)from claims where plan_year=year_1 group by patient; --check sum
+cursor c3 is select provider,count(provider) from claims where patient=p_c2 group by provider;
+
+
+begin
+open c1;
+loop
+fetch c1 into year_1,sum_ins_c;
+exit when c1%notfound;
+select count(plan_year) into prev_year_count from claims where plan_year=year_1-1;--check if there is previous year
+if prev_year_count=0 then ---check if this the first year for the insurance company--no previous year
+dbms_output.put_line('year'||year_1);
+dbms_output.put_line('firs year, there is no previous year');
+else
+dbms_output.put_line('year'||year_1);
+select distinct plan_year into prev_year from claims where plan_year=year_1-1;--check if there is previous year
+select plan_year,sum(TOTAL_CHARGE_INSR)into prev_year,sum_ins_p from claims where plan_year=prev_year group by plan_year;
+if sum_ins_c>sum_ins_p* x  then
+
+select sum(TOTAL_CHARGE_INSR)/count( DISTINCT Patient) into avg_current from claims where plan_year=year_1;
+select sum(TOTAL_CHARGE_INSR)/count( DISTINCT Patient) into avg_last from claims where plan_year=year_1-1;
+
+if  avg_current>avg_last*y then
+select max(aver) into maxi from (select sum(TOTAL_CHARGE_INSR)/count( DISTINCT Patient)As aver from claims where plan_year=year_1 group by patient); --check the max average
+
+open c2;
+loop
+fetch c2 into p_c2,sum_result;
+exit when c2%notfound;
+if sum_result=maxi then
+dbms_output.put_line('Probabaly a fraud case ');
+dbms_output.put_line(' patient name:  '||p_c2);
+dbms_output.put_line(' Have highest average of payment: '||maxi);
+select max(p) into prov_max_use from(select provider,count(provider) As p from claims where patient=p_c2 group by provider); 
+
+open c3;
+loop
+fetch c3 into prov_fr,prov_n_use;
+exit when c3%notfound;
+if prov_n_use=prov_max_use then
+dbms_output.put_line('Most of patient claimm is through this provider:  '||prov_fr);
+dbms_output.put_line('Number of services through this provider:'||prov_max_use||'    service');
+end if;
+end loop;
+close c3;
+end if;
+end loop;
+close c2;
+else
+dbms_output.put_line('No Fraud: The increase in payment is due to increase in patients' );
+end if;
+else
+dbms_output.put_line('There is no fraud detected for year : '||year_1||'');
+end if;
+end if;
+end loop;
+close c1;
+end;
+
+
+
+--Execution script for 15
+
+--There is a fraud 
+
+execute suspicious_pattern(2,2);
+
+
+--There is no a fraud 
+
+execute suspicious_pattern(10,10);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
